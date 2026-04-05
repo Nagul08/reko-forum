@@ -33,6 +33,11 @@ export default function PostPage({ post, user, onClose }) {
   }
 
   async function handleReply() {
+    if (!user) {
+      setError('Please sign in to reply.')
+      return
+    }
+
     if (!replyText.trim()) return
 
     setPosting(true)
@@ -41,8 +46,8 @@ export default function PostPage({ post, user, onClose }) {
     const { error: insertError } = await supabase.from('replies').insert({
       post_id: post.id,
       body: replyText.trim(),
-      user_id: user?.id ?? null,
-      is_anon: !user,
+      user_id: user.id,
+      is_anon: false,
     })
 
     if (insertError) {
@@ -86,13 +91,15 @@ export default function PostPage({ post, user, onClose }) {
         )}
 
         <div className="reply-box">
+          {!user && <p className="loading-text">Sign in to reply to this post.</p>}
           <textarea
             rows={3}
             value={replyText}
             placeholder="Write a reply..."
             onChange={(event) => setReplyText(event.target.value)}
+            disabled={!user}
           />
-          <button onClick={handleReply} disabled={posting || !replyText.trim()}>
+          <button onClick={handleReply} disabled={!user || posting || !replyText.trim()}>
             {posting ? 'Posting...' : 'Reply'}
           </button>
         </div>

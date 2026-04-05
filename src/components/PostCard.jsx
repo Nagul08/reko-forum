@@ -37,25 +37,16 @@ export default function PostCard({ post, user, onOpen, onChange }) {
 
   async function handleVote() {
     if (busy) return
+
+    if (!user) {
+      setError('Please sign in to upvote posts.')
+      return
+    }
+
     setBusy(true)
     setError('')
 
-    const anonToken = user ? null : getAnonToken()
-
-    if (!user && anonToken) {
-      const { data: existingVote, error: existingVoteError } = await supabase
-        .from('votes')
-        .select('id')
-        .eq('post_id', post.id)
-        .eq('anon_token', anonToken)
-        .maybeSingle()
-
-      if (!existingVoteError && existingVote) {
-        setBusy(false)
-        setError('You already upvoted this post.')
-        return
-      }
-    }
+    const anonToken = null
 
     setVotes((current) => current + 1)
 
@@ -77,6 +68,11 @@ export default function PostCard({ post, user, onOpen, onChange }) {
   }
 
   async function handleReport() {
+    if (!user) {
+      setError('Please sign in to report posts.')
+      return
+    }
+
     const { error: reportError } = await supabase.from('reports').insert({ post_id: post.id })
     if (reportError) {
       setError(reportError.message)

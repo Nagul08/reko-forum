@@ -73,10 +73,6 @@ export default function Feed({ user, onOpenPost, searchQuery }) {
 
     if (scope === 'mine' && user?.id) {
       query = query.eq('user_id', user.id)
-    } else if (user?.id) {
-      query = query.or(`is_anon.eq.true,user_id.eq.${user.id}`)
-    } else {
-      query = query.eq('is_anon', true)
     }
 
     if (tag !== 'all') query = query.eq('tag', tag)

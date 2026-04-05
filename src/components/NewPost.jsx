@@ -12,6 +12,11 @@ export default function NewPost({ user, onPost }) {
   const [error, setError] = useState('')
 
   async function handleSubmit() {
+    if (!user) {
+      setError('Please sign in to create a post.')
+      return
+    }
+
     if (!title.trim() || !body.trim()) return
 
     setLoading(true)
@@ -21,8 +26,8 @@ export default function NewPost({ user, onPost }) {
       title: title.trim(),
       body: body.trim(),
       tag,
-      user_id: user?.id ?? null,
-      is_anon: !user,
+      user_id: user.id,
+      is_anon: false,
     })
 
     if (insertError) {
@@ -41,8 +46,16 @@ export default function NewPost({ user, onPost }) {
   if (!open) {
     return (
       <button className="new-post-trigger" onClick={() => setOpen(true)}>
-        Post anonymously...
+        {user ? 'Create a post...' : 'Sign in to create a post'}
       </button>
+    )
+  }
+
+  if (!user) {
+    return (
+      <div className="new-post-form">
+        <p className="loading-text">Posting is available only after login.</p>
+      </div>
     )
   }
 
