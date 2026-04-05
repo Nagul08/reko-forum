@@ -27,6 +27,15 @@ function isDuplicateVoteError(error) {
   )
 }
 
+function getFriendlyUnvoteError(error) {
+  const rawMessage = (error?.message || '').toLowerCase()
+  if (rawMessage.includes('row-level security') || rawMessage.includes('permission denied')) {
+    return 'Un-upvote is blocked by database policy. Please run the votes RLS fix SQL.'
+  }
+
+  return 'Could not remove your upvote. Please try again.'
+}
+
 export default function PostCard({ post, user, isAdmin, onOpen, onChange }) {
   const [votes, setVotes] = useState(post.votes_count ?? post.votes ?? 0)
   const [hasVoted, setHasVoted] = useState(false)
@@ -91,7 +100,7 @@ export default function PostCard({ post, user, isAdmin, onOpen, onChange }) {
 
       if (removeError) {
         setBusy(false)
-        setError('Could not remove your upvote. Please try again.')
+        setError(getFriendlyUnvoteError(removeError))
         return
       }
 
