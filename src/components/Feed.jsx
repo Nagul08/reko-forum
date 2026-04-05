@@ -30,13 +30,58 @@ export default function Feed({ user, onOpenPost, searchQuery }) {
     let query = supabase.from('posts').select('*')
 
     if (tag !== 'all') query = query.eq('tag', tag)
-    if (sort === 'new') query = query.order('created_at', { ascending: false })
-    if (sort === 'top') query = query.order('votes', { ascending: false })
+    query = query.order('created_at', { ascending: false })
 
     const { data, error } = await query
 
-    if (!error) {
-      setPosts(data || [])
+    if (!error && data) {
+      const postIds = data.map((post) => post.id)
+      let repliesCountByPost = {}
+      let votesCountByPost = {}
+
+      if (postIds.length > 0) {
+        const { data: repliesData, error: repliesError } = await supabase
+          .from('replies')
+          .select('post_id')
+          .in('post_id', postIds)
+
+        if (!repliesError && repliesData) {
+          repliesCountByPost = repliesData.reduce((accumulator, reply) => {
+            const key = reply.post_id
+            accumulator[key] = (accumulator[key] || 0) + 1
+            return accumulator
+          }, {})
+        }
+
+        const { data: votesData, error: votesError } = await supabase
+          .from('votes')
+          .select('post_id')
+          .in('post_id', postIds)
+
+        if (!votesError && votesData) {
+          votesCountByPost = votesData.reduce((accumulator, vote) => {
+            const key = vote.post_id
+            accumulator[key] = (accumulator[key] || 0) + 1
+            return accumulator
+          }, {})
+        }
+      }
+
+      const mappedPosts = data.map((post) => ({
+          ...post,
+          replies_count: repliesCountByPost[post.id] || 0,
+          votes_count: votesCountByPost[post.id] || 0,
+      }))
+
+      if (sort === 'top') {
+        mappedPosts.sort((left, right) => {
+          const votesDelta = (right.votes_count || 0) - (left.votes_count || 0)
+          if (votesDelta !== 0) return votesDelta
+          return new Date(right.created_at) - new Date(left.created_at)
+        })
+      }
+
+      setPosts(mappedPosts)
     }
 
     setLoading(false)

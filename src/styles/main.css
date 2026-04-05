@@ -386,6 +386,12 @@ select:focus {
   font-size: 0.85rem;
 }
 
+.replies-count {
+  padding: 0.2rem 0.55rem;
+  border: 1px solid var(--tab-border);
+  border-radius: 999px;
+}
+
 .form-actions {
   margin-top: 0.8rem;
   display: flex;

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
 
 function getAnonToken() {
@@ -10,11 +10,15 @@ function getAnonToken() {
 }
 
 export default function PostCard({ post, user, onOpen, onChange }) {
-  const [votes, setVotes] = useState(post.votes || 0)
+  const [votes, setVotes] = useState(post.votes_count ?? post.votes ?? 0)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
   const timestamp = useMemo(() => new Date(post.created_at).toLocaleString(), [post.created_at])
+
+  useEffect(() => {
+    setVotes(post.votes_count ?? post.votes ?? 0)
+  }, [post.votes_count, post.votes])
 
   async function handleVote() {
     if (busy) return
@@ -34,12 +38,6 @@ export default function PostCard({ post, user, onOpen, onChange }) {
       setBusy(false)
       setError(voteError.message)
       return
-    }
-
-    const { error: incrementError } = await supabase.rpc('increment_votes', { post_id: post.id })
-    if (incrementError) {
-      setVotes((current) => current - 1)
-      setError(incrementError.message)
     }
 
     setBusy(false)
@@ -67,6 +65,7 @@ export default function PostCard({ post, user, onOpen, onChange }) {
       <p>{post.body}</p>
 
       <div className="post-actions">
+        <span className="meta replies-count">Replies: {post.replies_count || 0}</span>
         <button className="ghost" onClick={onOpen}>Reply</button>
         <button className="ghost" onClick={handleReport}>Report</button>
         <button onClick={handleVote} disabled={busy}>Upvote ({votes})</button>
