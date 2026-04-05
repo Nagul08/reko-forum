@@ -9,6 +9,21 @@ function getAnonToken() {
   return generated
 }
 
+function getFriendlyVoteError(error) {
+  const rawMessage = error?.message || ''
+  const constraint = error?.constraint || ''
+
+  if (
+    constraint === 'votes_post_id_user_id_key' ||
+    rawMessage.includes('votes_post_id_user_id_key') ||
+    rawMessage.toLowerCase().includes('duplicate key value')
+  ) {
+    return 'You already upvoted this post.'
+  }
+
+  return rawMessage || 'Could not register your vote. Please try again.'
+}
+
 export default function PostCard({ post, user, onOpen, onChange }) {
   const [votes, setVotes] = useState(post.votes_count ?? post.votes ?? 0)
   const [busy, setBusy] = useState(false)
@@ -36,7 +51,7 @@ export default function PostCard({ post, user, onOpen, onChange }) {
     if (voteError) {
       setVotes((current) => current - 1)
       setBusy(false)
-      setError(voteError.message)
+      setError(getFriendlyVoteError(voteError))
       return
     }
 
