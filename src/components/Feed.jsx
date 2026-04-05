@@ -1,14 +1,16 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import NewPost from './NewPost'
 import PostCard from './PostCard'
 
 export default function Feed({ user, onOpenPost, searchQuery }) {
   const [posts, setPosts] = useState([])
-  const [sort, setSort] = useState('new')
   const [tag, setTag] = useState('all')
   const [scope, setScope] = useState('public')
+  const [showFilter, setShowFilter] = useState(false)
+  const [viewMode, setViewMode] = useState('home')
   const [loading, setLoading] = useState(true)
+  const filterRef = useRef(null)
 
   const filteredPosts = useMemo(() => {
     const term = searchQuery.trim().toLowerCase()
@@ -21,15 +23,48 @@ export default function Feed({ user, onOpenPost, searchQuery }) {
     })
   }, [posts, searchQuery])
 
+  const newPosts = useMemo(() => {
+    return [...filteredPosts].sort((left, right) => new Date(right.created_at) - new Date(left.created_at))
+  }, [filteredPosts])
+
+  const topPosts = useMemo(() => {
+    return [...filteredPosts].sort((left, right) => {
+      const votesDelta = (right.votes_count || 0) - (left.votes_count || 0)
+      if (votesDelta !== 0) return votesDelta
+      return new Date(right.created_at) - new Date(left.created_at)
+    })
+  }, [filteredPosts])
+
+  const previewNewPosts = newPosts.slice(0, 3)
+  const previewTopPosts = topPosts.slice(0, 3)
+  const viewingAll = viewMode === 'new-all' || viewMode === 'top-all'
+  const allItems = viewMode === 'top-all' ? topPosts : newPosts
+
   useEffect(() => {
     fetchPosts()
-  }, [sort, tag, scope, user?.id])
+  }, [tag, scope, user?.id])
 
   useEffect(() => {
     if (!user && scope === 'mine') {
       setScope('public')
     }
   }, [user, scope])
+
+  useEffect(() => {
+    function handleOutsideClick(event) {
+      if (filterRef.current && !filterRef.current.contains(event.target)) {
+        setShowFilter(false)
+      }
+    }
+
+    if (showFilter) {
+      document.addEventListener('mousedown', handleOutsideClick)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick)
+    }
+  }, [showFilter])
 
   async function fetchPosts() {
     setLoading(true)
@@ -82,66 +117,83 @@ export default function Feed({ user, onOpenPost, searchQuery }) {
         }
       }
 
-      const mappedPosts = data.map((post) => ({
+      setPosts(
+        data.map((post) => ({
           ...post,
           replies_count: repliesCountByPost[post.id] || 0,
           votes_count: votesCountByPost[post.id] || 0,
-      }))
-
-      if (sort === 'top') {
-        mappedPosts.sort((left, right) => {
-          const votesDelta = (right.votes_count || 0) - (left.votes_count || 0)
-          if (votesDelta !== 0) return votesDelta
-          return new Date(right.created_at) - new Date(left.created_at)
-        })
-      }
-
-      setPosts(mappedPosts)
+        })),
+      )
     }
 
     setLoading(false)
   }
+
+  function renderPostList(items) {
+    if (items.length === 0) {
+      return <p className="loading-text">No posts found for current filters.</p>
+    }
+
+    return (
+      <div className="post-list">
+        {items.map((post) => (
+          <PostCard
+            key={post.id}
+            post={post}
+            user={user}
+            onOpen={() => onOpenPost(post)}
+            onChange={fetchPosts}
+          />
+        ))}
+      </div>
+    )
+  }
+
   return (
     <div className="feed">
       <NewPost user={user} onPost={fetchPosts} />
 
       <div className="feed-controls">
-        {user && (
-          <div className="tabs" role="tablist" aria-label="Post scope">
-            {[['public', 'all posts'], ['mine', 'my posts']].map(([value, label]) => (
-              <button
-                key={value}
-                className={scope === value ? 'tab active' : 'tab'}
-                onClick={() => setScope(value)}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        )}
+        <div className="filter-wrap" ref={filterRef}>
+          <button className="ghost" onClick={() => setShowFilter((current) => !current)}>
+            Filter
+          </button>
 
-        <div className="tabs" role="tablist" aria-label="Sort posts">
-          {['new', 'top'].map((value) => (
-            <button
-              key={value}
-              className={sort === value ? 'tab active' : 'tab'}
-              onClick={() => setSort(value)}
-            >
-              {value}
-            </button>
-          ))}
-        </div>
+          {showFilter && (
+            <div className="filter-popover">
+              {user && (
+                <div className="filter-group">
+                  <p className="filter-title">Posts</p>
+                  <div className="tabs">
+                    {[['public', 'all posts'], ['mine', 'my posts']].map(([value, label]) => (
+                      <button
+                        key={value}
+                        className={scope === value ? 'tab active' : 'tab'}
+                        onClick={() => setScope(value)}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-        <div className="tabs" role="tablist" aria-label="Filter tags">
-          {['all', 'confession', 'topic', 'rant', 'question'].map((value) => (
-            <button
-              key={value}
-              className={tag === value ? 'tab active' : 'tab'}
-              onClick={() => setTag(value)}
-            >
-              {value}
-            </button>
-          ))}
+              <div className="filter-group">
+                <p className="filter-title">Tags</p>
+                <div className="tabs" role="tablist" aria-label="Filter tags">
+                  {['all', 'confession', 'topic', 'rant', 'question'].map((value) => (
+                    <button
+                      key={value}
+                      className={tag === value ? 'tab active' : 'tab'}
+                      onClick={() => setTag(value)}
+                    >
+                      {value}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -151,17 +203,31 @@ export default function Feed({ user, onOpenPost, searchQuery }) {
         <p className="loading-text">No posts yet. Be the first.</p>
       ) : filteredPosts.length === 0 ? (
         <p className="loading-text">No posts found for &quot;{searchQuery.trim()}&quot;.</p>
+      ) : viewingAll ? (
+        <section className="section-block">
+          <div className="section-head">
+            <h3>{viewMode === 'top-all' ? 'Top posts' : 'New posts'}</h3>
+            <button className="ghost" onClick={() => setViewMode('home')}>Back</button>
+          </div>
+          {renderPostList(allItems)}
+        </section>
       ) : (
-        <div className="post-list">
-          {filteredPosts.map((post) => (
-            <PostCard
-              key={post.id}
-              post={post}
-              user={user}
-              onOpen={() => onOpenPost(post)}
-              onChange={fetchPosts}
-            />
-          ))}
+        <div className="section-grid">
+          <section className="section-block">
+            <div className="section-head">
+              <h3>New</h3>
+              <button className="ghost" onClick={() => setViewMode('new-all')}>View all</button>
+            </div>
+            {renderPostList(previewNewPosts)}
+          </section>
+
+          <section className="section-block">
+            <div className="section-head">
+              <h3>Top</h3>
+              <button className="ghost" onClick={() => setViewMode('top-all')}>View all</button>
+            </div>
+            {renderPostList(previewTopPosts)}
+          </section>
         </div>
       )}
     </div>

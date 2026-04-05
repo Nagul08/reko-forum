@@ -270,6 +270,59 @@ select:focus {
   margin: 1rem 0;
 }
 
+.filter-wrap {
+  position: relative;
+}
+
+.filter-popover {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  width: min(560px, 96vw);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 0.8rem;
+  z-index: 20;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
+  display: grid;
+  gap: 0.7rem;
+}
+
+.filter-group {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.filter-title {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.section-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.section-block {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.55rem;
+}
+
+.section-head h3 {
+  margin: 0;
+}
+
 .search-shell {
   display: flex;
   align-items: center;
@@ -528,6 +581,11 @@ select:focus {
   .nav-search .search-row.is-open {
     width: calc(100% - 46px);
     max-width: none;
+  }
+
+  .filter-popover {
+    left: 0;
+    width: calc(100vw - 1.5rem);
   }
 
   .user-pill {
