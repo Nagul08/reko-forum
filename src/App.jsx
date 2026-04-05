@@ -5,12 +5,19 @@ import Navbar from './components/Navbar'
 import PostPage from './components/PostPage'
 import { supabase } from './lib/supabase'
 
+function isAdminUser(user) {
+  const appRole = user?.app_metadata?.role
+  const userRole = user?.user_metadata?.role
+  return appRole === 'admin' || userRole === 'admin'
+}
+
 export default function App() {
   const [user, setUser] = useState(null)
   const [showAuth, setShowAuth] = useState(false)
   const [activePost, setActivePost] = useState(null)
   const [theme, setTheme] = useState(() => localStorage.getItem('reko-theme') || 'dark')
   const [searchQuery, setSearchQuery] = useState('')
+  const isAdmin = isAdminUser(user)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -37,6 +44,7 @@ export default function App() {
     <div className="app-shell">
       <Navbar
         user={user}
+        isAdmin={isAdmin}
         theme={theme}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}

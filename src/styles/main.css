@@ -233,6 +233,25 @@ select:focus {
   font-size: 0.85rem;
 }
 
+.user-meta-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.admin-pill {
+  display: inline-flex;
+  background: rgba(255, 186, 57, 0.15);
+  border: 1px solid rgba(255, 186, 57, 0.45);
+  color: #ffd987;
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
 .nav-actions-primary {
   display: flex;
   align-items: center;

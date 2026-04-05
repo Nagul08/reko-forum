@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import ThemeToggle from './ThemeToggle'
 
-export default function Navbar({ user, theme, searchQuery, onSearchChange, onThemeToggle, onSignIn, onSignOut }) {
+export default function Navbar({ user, isAdmin, theme, searchQuery, onSearchChange, onThemeToggle, onSignIn, onSignOut }) {
   const username = user?.user_metadata?.username || user?.email?.split('@')[0]
   const [searchOpen, setSearchOpen] = useState(false)
   const searchInputRef = useRef(null)
@@ -74,7 +74,12 @@ export default function Navbar({ user, theme, searchQuery, onSearchChange, onThe
           </div>
         </div>
 
-        {user && <span className="user-pill">@{username}</span>}
+        {user && (
+          <div className="user-meta-row">
+            {isAdmin && <span className="admin-pill">Admin</span>}
+            <span className="user-pill">@{username}</span>
+          </div>
+        )}
       </div>
     </header>
   )
