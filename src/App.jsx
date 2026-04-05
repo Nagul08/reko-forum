@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import AdminReports from './components/AdminReports'
 import Auth from './components/Auth'
 import Feed from './components/Feed'
 import Navbar from './components/Navbar'
@@ -17,6 +18,7 @@ export default function App() {
   const [activePost, setActivePost] = useState(null)
   const [theme, setTheme] = useState(() => localStorage.getItem('reko-theme') || 'dark')
   const [searchQuery, setSearchQuery] = useState('')
+  const [activeView, setActiveView] = useState('feed')
   const isAdmin = isAdminUser(user)
 
   useEffect(() => {
@@ -36,6 +38,12 @@ export default function App() {
     localStorage.setItem('reko-theme', theme)
   }, [theme])
 
+  useEffect(() => {
+    if (!isAdmin && activeView === 'reports') {
+      setActiveView('feed')
+    }
+  }, [activeView, isAdmin])
+
   async function handleSignOut() {
     await supabase.auth.signOut()
   }
@@ -51,12 +59,18 @@ export default function App() {
         onThemeToggle={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))}
         onSignIn={() => setShowAuth(true)}
         onSignOut={handleSignOut}
+        activeView={activeView}
+        onViewChange={setActiveView}
       />
 
       {showAuth && <Auth onClose={() => setShowAuth(false)} />}
 
       <main className="flex flex-col gap-4">
-        <Feed user={user} isAdmin={isAdmin} onOpenPost={setActivePost} searchQuery={searchQuery} />
+        {activeView === 'reports' && isAdmin ? (
+          <AdminReports onOpenPost={setActivePost} />
+        ) : (
+          <Feed user={user} isAdmin={isAdmin} onOpenPost={setActivePost} searchQuery={searchQuery} />
+        )}
       </main>
 
       {activePost && (

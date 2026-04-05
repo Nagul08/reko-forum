@@ -6,7 +6,18 @@ import { Button } from './ui/button'
 import { Card } from './ui/card'
 import { Input } from './ui/input'
 
-export default function Navbar({ user, isAdmin, theme, searchQuery, onSearchChange, onThemeToggle, onSignIn, onSignOut }) {
+export default function Navbar({
+  user,
+  isAdmin,
+  theme,
+  searchQuery,
+  onSearchChange,
+  onThemeToggle,
+  onSignIn,
+  onSignOut,
+  activeView,
+  onViewChange,
+}) {
   const username = user?.user_metadata?.username || user?.email?.split('@')[0]
   const [searchOpen, setSearchOpen] = useState(false)
   const searchInputRef = useRef(null)
@@ -80,6 +91,25 @@ export default function Navbar({ user, isAdmin, theme, searchQuery, onSearchChan
                 className="transition-all"
               />
             </div>
+
+            {isAdmin && (
+              <div className="ml-1 hidden items-center gap-2 sm:inline-flex">
+                <Button
+                  variant={activeView === 'feed' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => onViewChange?.('feed')}
+                >
+                  Feed
+                </Button>
+                <Button
+                  variant={activeView === 'reports' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => onViewChange?.('reports')}
+                >
+                  Reports
+                </Button>
+              </div>
+            )}
           </div>
 
           {user && (
