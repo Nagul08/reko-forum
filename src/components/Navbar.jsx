@@ -1,4 +1,8 @@
-export default function Navbar({ user, onSignIn, onSignOut }) {
+import ThemeToggle from './ThemeToggle'
+
+export default function Navbar({ user, theme, onThemeToggle, onSignIn, onSignOut }) {
+  const username = user?.user_metadata?.username || user?.email?.split('@')[0]
+
   return (
     <header className="navbar">
       <div>
@@ -7,9 +11,11 @@ export default function Navbar({ user, onSignIn, onSignOut }) {
       </div>
 
       <div className="nav-actions">
+        <ThemeToggle isDark={theme === 'dark'} onChange={onThemeToggle} />
+
         {user ? (
           <>
-            <span className="user-pill">{user.email}</span>
+            <span className="user-pill">@{username}</span>
             <button className="ghost" onClick={onSignOut}>Sign out</button>
           </>
         ) : (

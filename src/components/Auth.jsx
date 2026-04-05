@@ -1,51 +1,56 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 
+const USERNAME_EMAIL_DOMAIN = 'reko.local'
+
+function normalizeUsername(value) {
+  return value.trim().toLowerCase()
+}
+
+function toSyntheticEmail(username) {
+  return `${normalizeUsername(username)}@${USERNAME_EMAIL_DOMAIN}`
+}
+
 export default function Auth({ onClose }) {
-  const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [mode, setMode] = useState('password')
   const [isSignUp, setIsSignUp] = useState(false)
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
 
   async function handlePasswordAuth() {
-    if (!email.trim() || !password.trim()) {
-      setMessage('Email and password are required.')
+    const cleanUsername = normalizeUsername(username)
+    if (!cleanUsername || !password.trim()) {
+      setMessage('Username and password are required.')
+      return
+    }
+
+    if (!/^[a-z0-9_]{3,20}$/.test(cleanUsername)) {
+      setMessage('Username must be 3-20 chars using a-z, 0-9, or _.')
       return
     }
 
     setLoading(true)
     setMessage('')
 
+    const email = toSyntheticEmail(cleanUsername)
+
     const { error } = isSignUp
-      ? await supabase.auth.signUp({ email, password })
+      ? await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              username: cleanUsername,
+            },
+          },
+        })
       : await supabase.auth.signInWithPassword({ email, password })
 
-    setMessage(error ? error.message : isSignUp ? 'Check your email to confirm.' : 'Signed in successfully.')
+    setMessage(error ? error.message : isSignUp ? 'Account created. You can sign in now.' : 'Signed in successfully.')
     setLoading(false)
 
     if (!error && !isSignUp) onClose?.()
-  }
-
-  async function handleMagicLink() {
-    if (!email.trim()) {
-      setMessage('Email is required.')
-      return
-    }
-
-    setLoading(true)
-    setMessage('')
-
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: window.location.origin,
-      },
-    })
-
-    setMessage(error ? error.message : 'Magic link sent. Check your email.')
-    setLoading(false)
   }
 
   return (
@@ -58,40 +63,26 @@ export default function Auth({ onClose }) {
         <h2>{isSignUp ? 'Create account' : 'Sign in'}</h2>
 
         <input
-          type="email"
-          placeholder="you@example.com"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
+          type="text"
+          placeholder="username"
+          value={username}
+          onChange={(event) => setUsername(event.target.value)}
         />
 
-        {mode === 'password' && (
-          <input
-            type="password"
-            placeholder="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-          />
-        )}
+        <input
+          type="password"
+          placeholder="password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+        />
 
-        {mode === 'password' ? (
-          <button onClick={handlePasswordAuth} disabled={loading}>
-            {loading ? 'Loading...' : isSignUp ? 'Sign up' : 'Sign in'}
-          </button>
-        ) : (
-          <button onClick={handleMagicLink} disabled={loading}>
-            {loading ? 'Sending...' : 'Send magic link'}
-          </button>
-        )}
+        <button onClick={handlePasswordAuth} disabled={loading}>
+          {loading ? 'Loading...' : isSignUp ? 'Sign up' : 'Sign in'}
+        </button>
 
-        <p className="auth-link" onClick={() => setMode((current) => (current === 'password' ? 'magic' : 'password'))}>
-          {mode === 'password' ? 'Use magic link instead' : 'Use password instead'}
+        <p className="auth-link" onClick={() => setIsSignUp((current) => !current)}>
+          {isSignUp ? 'Already have an account? Sign in' : 'No account? Sign up'}
         </p>
-
-        {mode === 'password' && (
-          <p className="auth-link" onClick={() => setIsSignUp((current) => !current)}>
-            {isSignUp ? 'Already have an account? Sign in' : 'No account? Sign up'}
-          </p>
-        )}
 
         {message && <p className="auth-message">{message}</p>}
       </div>
