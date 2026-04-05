@@ -1,14 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
 
-function getAnonToken() {
-  const existing = localStorage.getItem('reko_anon_token')
-  if (existing) return existing
-  const generated = crypto.randomUUID()
-  localStorage.setItem('reko_anon_token', generated)
-  return generated
-}
-
 function getFriendlyVoteError(error) {
   const rawMessage = error?.message || ''
   const constraint = error?.constraint || ''
@@ -76,22 +68,35 @@ export default function PostCard({ post, user, isAdmin, onOpen, onChange }) {
       return
     }
 
-    if (hasVoted) {
-      setError('You already upvoted this post.')
-      return
-    }
-
     setBusy(true)
     setError('')
 
-    const anonToken = null
+    if (hasVoted) {
+      const { error: removeError } = await supabase
+        .from('votes')
+        .delete()
+        .eq('post_id', post.id)
+        .eq('user_id', user.id)
+
+      if (removeError) {
+        setBusy(false)
+        setError('Could not remove your upvote. Please try again.')
+        return
+      }
+
+      setVotes((current) => Math.max(0, current - 1))
+      setHasVoted(false)
+      setBusy(false)
+      onChange?.()
+      return
+    }
 
     setVotes((current) => current + 1)
 
     const { error: voteError } = await supabase.from('votes').insert({
       post_id: post.id,
-      user_id: user?.id ?? null,
-      anon_token: anonToken,
+      user_id: user.id,
+      anon_token: null,
     })
 
     if (voteError) {
