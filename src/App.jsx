@@ -10,6 +10,7 @@ export default function App() {
   const [showAuth, setShowAuth] = useState(false)
   const [activePost, setActivePost] = useState(null)
   const [theme, setTheme] = useState(() => localStorage.getItem('reko-theme') || 'dark')
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -37,6 +38,8 @@ export default function App() {
       <Navbar
         user={user}
         theme={theme}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
         onThemeToggle={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))}
         onSignIn={() => setShowAuth(true)}
         onSignOut={handleSignOut}
@@ -45,7 +48,7 @@ export default function App() {
       {showAuth && <Auth onClose={() => setShowAuth(false)} />}
 
       <main className="main-content">
-        <Feed user={user} onOpenPost={setActivePost} />
+        <Feed user={user} onOpenPost={setActivePost} searchQuery={searchQuery} />
       </main>
 
       {activePost && (

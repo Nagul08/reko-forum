@@ -1,13 +1,24 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import NewPost from './NewPost'
 import PostCard from './PostCard'
 
-export default function Feed({ user, onOpenPost }) {
+export default function Feed({ user, onOpenPost, searchQuery }) {
   const [posts, setPosts] = useState([])
   const [sort, setSort] = useState('new')
   const [tag, setTag] = useState('all')
   const [loading, setLoading] = useState(true)
+
+  const filteredPosts = useMemo(() => {
+    const term = searchQuery.trim().toLowerCase()
+    if (!term) return posts
+
+    return posts.filter((post) => {
+      return [post.title, post.body, post.tag]
+        .filter(Boolean)
+        .some((value) => value.toLowerCase().includes(term))
+    })
+  }, [posts, searchQuery])
 
   useEffect(() => {
     fetchPosts()
@@ -30,7 +41,6 @@ export default function Feed({ user, onOpenPost }) {
 
     setLoading(false)
   }
-
   return (
     <div className="feed">
       <NewPost user={user} onPost={fetchPosts} />
@@ -65,9 +75,11 @@ export default function Feed({ user, onOpenPost }) {
         <p className="loading-text">Loading posts...</p>
       ) : posts.length === 0 ? (
         <p className="loading-text">No posts yet. Be the first.</p>
+      ) : filteredPosts.length === 0 ? (
+        <p className="loading-text">No posts found for &quot;{searchQuery.trim()}&quot;.</p>
       ) : (
         <div className="post-list">
-          {posts.map((post) => (
+          {filteredPosts.map((post) => (
             <PostCard
               key={post.id}
               post={post}

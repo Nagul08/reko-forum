@@ -238,6 +238,58 @@ select:focus {
   margin: 1rem 0;
 }
 
+.search-shell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.55rem;
+}
+
+.nav-search {
+  min-height: 40px;
+}
+
+.search-toggle {
+  width: 40px;
+  min-width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 1rem;
+}
+
+.search-toggle:hover {
+  transform: none;
+}
+
+.search-icon {
+  width: 16px;
+  height: 16px;
+  display: block;
+  filter: drop-shadow(0 0 2px rgba(49, 255, 99, 0.35));
+}
+
+.search-row {
+  width: 0;
+  opacity: 0;
+  overflow: hidden;
+  transform: scale(0.95);
+  transform-origin: right center;
+  transition: width 0.24s ease, opacity 0.2s ease, transform 0.24s ease;
+}
+
+.search-row.is-open {
+  width: min(320px, calc(100vw - 180px));
+  opacity: 1;
+  transform: scale(1);
+}
+
+.search-row input {
+  min-width: 0;
+}
+
 .tabs {
   display: flex;
   flex-wrap: wrap;
