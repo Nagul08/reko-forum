@@ -40,12 +40,29 @@ export default function PostCard({ post, user, onOpen, onChange }) {
     setBusy(true)
     setError('')
 
+    const anonToken = user ? null : getAnonToken()
+
+    if (!user && anonToken) {
+      const { data: existingVote, error: existingVoteError } = await supabase
+        .from('votes')
+        .select('id')
+        .eq('post_id', post.id)
+        .eq('anon_token', anonToken)
+        .maybeSingle()
+
+      if (!existingVoteError && existingVote) {
+        setBusy(false)
+        setError('You already upvoted this post.')
+        return
+      }
+    }
+
     setVotes((current) => current + 1)
 
     const { error: voteError } = await supabase.from('votes').insert({
       post_id: post.id,
       user_id: user?.id ?? null,
-      anon_token: user ? null : getAnonToken(),
+      anon_token: anonToken,
     })
 
     if (voteError) {
