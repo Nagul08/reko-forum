@@ -66,8 +66,11 @@ export default function Feed({ user, isAdmin, onOpenPost, searchQuery }) {
     }
   }, [showFilter])
 
-  async function fetchPosts() {
-    setLoading(true)
+  async function fetchPosts(options = {}) {
+    const { silent = false } = options
+    if (!silent) {
+      setLoading(true)
+    }
 
     let query = supabase.from('posts').select('*')
 
@@ -122,7 +125,9 @@ export default function Feed({ user, isAdmin, onOpenPost, searchQuery }) {
       )
     }
 
-    setLoading(false)
+    if (!silent) {
+      setLoading(false)
+    }
   }
 
   function renderPostList(items) {
@@ -139,7 +144,7 @@ export default function Feed({ user, isAdmin, onOpenPost, searchQuery }) {
             user={user}
             isAdmin={isAdmin}
             onOpen={() => onOpenPost(post)}
-            onChange={fetchPosts}
+            onChange={() => fetchPosts({ silent: true })}
           />
         ))}
       </div>
