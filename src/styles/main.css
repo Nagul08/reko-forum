@@ -165,16 +165,32 @@ select:focus {
 }
 
 .navbar {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  align-items: center;
+  display: grid;
+  gap: 0.75rem;
   background: var(--navbar-bg);
   border: 1px solid var(--border);
   border-radius: 18px;
   padding: 1rem 1.2rem;
   margin-bottom: 1rem;
   box-shadow: 0 0 10px var(--navbar-shadow);
+}
+
+.navbar-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.brand-block {
+  min-width: 0;
+}
+
+.navbar-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
 }
 
 .navbar h1 {
@@ -184,11 +200,27 @@ select:focus {
 }
 
 .brand-eyebrow {
-  margin: 0 0 0.2rem;
+  margin: 0;
   color: var(--green-soft);
-  font-size: 0.85rem;
+  font-size: 1.45rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
+}
+
+.brand-credit {
+  margin: 0.2rem 0 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.brand-credit-logo {
+  height: 16px;
+  width: auto;
+  display: block;
 }
 
 .user-pill {
@@ -201,7 +233,7 @@ select:focus {
   font-size: 0.85rem;
 }
 
-.nav-actions {
+.nav-actions-primary {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -447,13 +479,55 @@ select:focus {
 }
 
 @media (max-width: 720px) {
-  .navbar {
-    flex-direction: column;
-    align-items: flex-start;
+  .app-shell {
+    padding: 0.75rem;
   }
 
-  .nav-actions {
+  .navbar {
+    padding: 0.9rem;
+  }
+
+  .navbar-top {
     width: 100%;
+    align-items: center;
     justify-content: space-between;
+    gap: 0.6rem;
+  }
+
+  .brand-eyebrow {
+    font-size: 1.2rem;
+  }
+
+  .nav-actions-primary {
+    flex-shrink: 0;
+    gap: 0.45rem;
+  }
+
+  .nav-actions-primary .ghost {
+    padding: 0.5rem 0.75rem;
+  }
+
+  .navbar-bottom {
+    width: 100%;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.5rem;
+  }
+
+  .nav-search .search-shell {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .nav-search .search-row.is-open {
+    width: calc(100% - 46px);
+    max-width: none;
+  }
+
+  .user-pill {
+    max-width: 56vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }

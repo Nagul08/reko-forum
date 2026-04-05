@@ -24,12 +24,27 @@ export default function Navbar({ user, theme, searchQuery, onSearchChange, onThe
 
   return (
     <header className="navbar">
-      <div>
-        <p className="brand-eyebrow">reko-forum</p>
-        <h1>Whisper. Post. Vent.</h1>
+      <div className="navbar-top">
+        <div className="brand-block">
+          <p className="brand-eyebrow">reko-forum</p>
+          <p className="brand-credit">
+            Made by
+            <img src="/retr0.svg" alt="retr0" className="brand-credit-logo" />
+          </p>
+        </div>
+
+        <div className="nav-actions-primary">
+          <ThemeToggle isDark={theme === 'dark'} onChange={onThemeToggle} />
+
+          {user ? (
+            <button className="ghost" onClick={onSignOut}>Sign out</button>
+          ) : (
+            <button className="ghost" onClick={onSignIn}>Sign in</button>
+          )}
+        </div>
       </div>
 
-      <div className="nav-actions">
+      <div className="navbar-bottom">
         <div className="search-shell nav-search">
           <button
             type="button"
@@ -59,16 +74,7 @@ export default function Navbar({ user, theme, searchQuery, onSearchChange, onThe
           </div>
         </div>
 
-        <ThemeToggle isDark={theme === 'dark'} onChange={onThemeToggle} />
-
-        {user ? (
-          <>
-            <span className="user-pill">@{username}</span>
-            <button className="ghost" onClick={onSignOut}>Sign out</button>
-          </>
-        ) : (
-          <button className="ghost" onClick={onSignIn}>Sign in</button>
-        )}
+        {user && <span className="user-pill">@{username}</span>}
       </div>
     </header>
   )
