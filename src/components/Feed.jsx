@@ -7,6 +7,7 @@ export default function Feed({ user, onOpenPost, searchQuery }) {
   const [posts, setPosts] = useState([])
   const [sort, setSort] = useState('new')
   const [tag, setTag] = useState('all')
+  const [scope, setScope] = useState('public')
   const [loading, setLoading] = useState(true)
 
   const filteredPosts = useMemo(() => {
@@ -22,12 +23,26 @@ export default function Feed({ user, onOpenPost, searchQuery }) {
 
   useEffect(() => {
     fetchPosts()
-  }, [sort, tag])
+  }, [sort, tag, scope, user?.id])
+
+  useEffect(() => {
+    if (!user && scope === 'mine') {
+      setScope('public')
+    }
+  }, [user, scope])
 
   async function fetchPosts() {
     setLoading(true)
 
     let query = supabase.from('posts').select('*')
+
+    if (scope === 'mine' && user?.id) {
+      query = query.eq('user_id', user.id)
+    } else if (user?.id) {
+      query = query.or(`is_anon.eq.true,user_id.eq.${user.id}`)
+    } else {
+      query = query.eq('is_anon', true)
+    }
 
     if (tag !== 'all') query = query.eq('tag', tag)
     query = query.order('created_at', { ascending: false })
@@ -91,6 +106,20 @@ export default function Feed({ user, onOpenPost, searchQuery }) {
       <NewPost user={user} onPost={fetchPosts} />
 
       <div className="feed-controls">
+        {user && (
+          <div className="tabs" role="tablist" aria-label="Post scope">
+            {[['public', 'all posts'], ['mine', 'my posts']].map(([value, label]) => (
+              <button
+                key={value}
+                className={scope === value ? 'tab active' : 'tab'}
+                onClick={() => setScope(value)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
+
         <div className="tabs" role="tablist" aria-label="Sort posts">
           {['new', 'top'].map((value) => (
             <button
