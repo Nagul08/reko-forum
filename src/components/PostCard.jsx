@@ -16,6 +16,17 @@ function getFriendlyVoteError(error) {
   return rawMessage || 'Could not register your vote. Please try again.'
 }
 
+function isDuplicateVoteError(error) {
+  const rawMessage = (error?.message || '').toLowerCase()
+  const constraint = error?.constraint || ''
+
+  return (
+    constraint === 'votes_post_id_user_id_key' ||
+    rawMessage.includes('votes_post_id_user_id_key') ||
+    rawMessage.includes('duplicate key value')
+  )
+}
+
 export default function PostCard({ post, user, isAdmin, onOpen, onChange }) {
   const [votes, setVotes] = useState(post.votes_count ?? post.votes ?? 0)
   const [hasVoted, setHasVoted] = useState(false)
@@ -100,6 +111,13 @@ export default function PostCard({ post, user, isAdmin, onOpen, onChange }) {
     })
 
     if (voteError) {
+      if (isDuplicateVoteError(voteError)) {
+        // Keep UI in sync if the user already had a vote on this post.
+        setHasVoted(true)
+        setBusy(false)
+        return
+      }
+
       setVotes((current) => current - 1)
       setBusy(false)
       setError(getFriendlyVoteError(voteError))
