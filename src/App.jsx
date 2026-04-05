@@ -56,13 +56,14 @@ export default function App() {
       {showAuth && <Auth onClose={() => setShowAuth(false)} />}
 
       <main className="main-content">
-        <Feed user={user} onOpenPost={setActivePost} searchQuery={searchQuery} />
+        <Feed user={user} isAdmin={isAdmin} onOpenPost={setActivePost} searchQuery={searchQuery} />
       </main>
 
       {activePost && (
         <PostPage
           post={activePost}
           user={user}
+          isAdmin={isAdmin}
           onClose={() => setActivePost(null)}
         />
       )}

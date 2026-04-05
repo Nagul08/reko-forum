@@ -140,6 +140,17 @@ button.ghost {
   box-shadow: 0 0 8px var(--ghost-glow);
 }
 
+button.danger {
+  background: rgba(255, 77, 124, 0.18);
+  border-color: rgba(255, 77, 124, 0.45);
+  color: #ff9db7;
+  box-shadow: none;
+}
+
+button.danger:hover {
+  box-shadow: none;
+}
+
 input,
 textarea,
 select {
@@ -554,6 +565,10 @@ select:focus {
   margin-top: 0.8rem;
   display: grid;
   gap: 0.5rem;
+}
+
+.reply-admin-row {
+  margin-top: 0.5rem;
 }
 
 @media (max-width: 720px) {

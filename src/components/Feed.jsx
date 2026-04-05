@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase'
 import NewPost from './NewPost'
 import PostCard from './PostCard'
 
-export default function Feed({ user, onOpenPost, searchQuery }) {
+export default function Feed({ user, isAdmin, onOpenPost, searchQuery }) {
   const [posts, setPosts] = useState([])
   const [tag, setTag] = useState('all')
   const [scope, setScope] = useState('public')
@@ -137,6 +137,7 @@ export default function Feed({ user, onOpenPost, searchQuery }) {
             key={post.id}
             post={post}
             user={user}
+            isAdmin={isAdmin}
             onOpen={() => onOpenPost(post)}
             onChange={fetchPosts}
           />

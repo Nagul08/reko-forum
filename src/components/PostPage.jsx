@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 
-export default function PostPage({ post, user, onClose }) {
+export default function PostPage({ post, user, isAdmin, onClose }) {
   const [replies, setReplies] = useState([])
   const [replyText, setReplyText] = useState('')
   const [loading, setLoading] = useState(true)
@@ -61,6 +61,23 @@ export default function PostPage({ post, user, onClose }) {
     fetchReplies()
   }
 
+  async function handleDeleteReply(replyId) {
+    const shouldDelete = window.confirm('Delete this reply? This action cannot be undone.')
+    if (!shouldDelete) return
+
+    const { error: deleteError } = await supabase
+      .from('replies')
+      .delete()
+      .eq('id', replyId)
+
+    if (deleteError) {
+      setError(deleteError.message)
+      return
+    }
+
+    setReplies((current) => current.filter((reply) => reply.id !== replyId))
+  }
+
   return (
     <div className="overlay" onClick={onClose}>
       <section className="post-page" onClick={(event) => event.stopPropagation()}>
@@ -85,6 +102,11 @@ export default function PostPage({ post, user, onClose }) {
               <li key={reply.id}>
                 <p>{reply.body}</p>
                 <small>{new Date(reply.created_at).toLocaleString()}</small>
+                {isAdmin && (
+                  <div className="reply-admin-row">
+                    <button className="danger" onClick={() => handleDeleteReply(reply.id)}>Delete reply</button>
+                  </div>
+                )}
               </li>
             ))}
           </ul>

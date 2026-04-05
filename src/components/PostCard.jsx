@@ -24,7 +24,7 @@ function getFriendlyVoteError(error) {
   return rawMessage || 'Could not register your vote. Please try again.'
 }
 
-export default function PostCard({ post, user, onOpen, onChange }) {
+export default function PostCard({ post, user, isAdmin, onOpen, onChange }) {
   const [votes, setVotes] = useState(post.votes_count ?? post.votes ?? 0)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -82,6 +82,23 @@ export default function PostCard({ post, user, onOpen, onChange }) {
     alert('Reported. Thanks.')
   }
 
+  async function handleDeletePost() {
+    const shouldDelete = window.confirm('Delete this post? This action cannot be undone.')
+    if (!shouldDelete) return
+
+    const { error: deleteError } = await supabase
+      .from('posts')
+      .delete()
+      .eq('id', post.id)
+
+    if (deleteError) {
+      setError(deleteError.message)
+      return
+    }
+
+    onChange?.()
+  }
+
   return (
     <article className="post-card">
       <div className="post-header">
@@ -96,6 +113,7 @@ export default function PostCard({ post, user, onOpen, onChange }) {
         <span className="meta replies-count">Replies: {post.replies_count || 0}</span>
         <button className="ghost" onClick={onOpen}>Reply</button>
         <button className="ghost" onClick={handleReport}>Report</button>
+        {isAdmin && <button className="danger" onClick={handleDeletePost}>Delete</button>}
         <button onClick={handleVote} disabled={busy}>Upvote ({votes})</button>
       </div>
 
