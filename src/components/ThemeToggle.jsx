@@ -1,26 +1,17 @@
-import styles from './ThemeToggle.module.css'
+import { Moon, Sun } from 'lucide-react'
+import { Button } from './ui/button'
 
-const defaultOptions = {
-  invertedIconLogic: false,
-}
-
-export default function ThemeToggle({
-  isDark,
-  onChange,
-  invertedIconLogic = defaultOptions.invertedIconLogic,
-}) {
+export default function ThemeToggle({ isDark, onChange }) {
   return (
-    <label
-      className={styles.container}
+    <Button
+      variant="outline"
+      size="icon"
+      onClick={onChange}
       title={isDark ? 'Activate light mode' : 'Activate dark mode'}
       aria-label={isDark ? 'Activate light mode' : 'Activate dark mode'}
+      type="button"
     >
-      <input
-        type="checkbox"
-        checked={invertedIconLogic ? !isDark : isDark}
-        onChange={onChange}
-      />
-      <div />
-    </label>
+      {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+    </Button>
   )
 }

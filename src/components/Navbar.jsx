@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
+import { Search } from 'lucide-react'
 import ThemeToggle from './ThemeToggle'
+import { Badge } from './ui/badge'
+import { Button } from './ui/button'
+import { Card } from './ui/card'
+import { Input } from './ui/input'
 
 export default function Navbar({ user, isAdmin, theme, searchQuery, onSearchChange, onThemeToggle, onSignIn, onSignOut }) {
   const username = user?.user_metadata?.username || user?.email?.split('@')[0]
@@ -23,64 +28,68 @@ export default function Navbar({ user, isAdmin, theme, searchQuery, onSearchChan
   }
 
   return (
-    <header className="navbar">
-      <div className="navbar-top">
-        <div className="brand-block">
-          <p className="brand-eyebrow">reko-forum</p>
-          <p className="brand-credit">
-            Made by
-            <img src="/retr0.svg" alt="retr0" className="brand-credit-logo" />
-          </p>
+    <Card className="border-border/80 bg-card/95 p-4 backdrop-blur">
+      <header className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-lg font-bold uppercase tracking-[0.2em] text-foreground">reko-forum</p>
+            <p className="mt-1 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+              Made by
+              <img src="/retr0.svg" alt="retr0" className="h-4 w-auto" />
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <ThemeToggle isDark={theme === 'dark'} onChange={onThemeToggle} />
+
+            {user ? (
+              <Button variant="outline" onClick={onSignOut}>Sign out</Button>
+            ) : (
+              <Button variant="outline" onClick={onSignIn}>Sign in</Button>
+            )}
+          </div>
         </div>
 
-        <div className="nav-actions-primary">
-          <ThemeToggle isDark={theme === 'dark'} onChange={onThemeToggle} />
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex min-h-10 items-center gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              size="icon"
+              onClick={handleSearchToggle}
+              aria-label={searchOpen ? 'Close search' : 'Open search'}
+              title={searchOpen ? 'Close search' : 'Open search'}
+            >
+              <Search className="h-4 w-4" />
+            </Button>
 
-          {user ? (
-            <button className="ghost" onClick={onSignOut}>Sign out</button>
-          ) : (
-            <button className="ghost" onClick={onSignIn}>Sign in</button>
+            <div className={searchOpen ? 'w-[min(320px,calc(100vw-220px))]' : 'w-0 overflow-hidden'}>
+              <Input
+                ref={searchInputRef}
+                type="search"
+                placeholder="Search posts..."
+                value={searchQuery}
+                onChange={(event) => onSearchChange(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Escape') {
+                    onSearchChange('')
+                    setSearchOpen(false)
+                  }
+                }}
+                aria-label="Search posts"
+                className="transition-all"
+              />
+            </div>
+          </div>
+
+          {user && (
+            <div className="inline-flex items-center gap-2">
+              {isAdmin && <Badge variant="secondary">Admin</Badge>}
+              <Badge variant="outline">@{username}</Badge>
+            </div>
           )}
         </div>
-      </div>
-
-      <div className="navbar-bottom">
-        <div className="search-shell nav-search">
-          <button
-            type="button"
-            className="search-toggle"
-            onClick={handleSearchToggle}
-            aria-label={searchOpen ? 'Close search' : 'Open search'}
-            title={searchOpen ? 'Close search' : 'Open search'}
-          >
-            <img src="/mag.svg" alt="" aria-hidden="true" className="search-icon" />
-          </button>
-
-          <div className={searchOpen ? 'search-row is-open' : 'search-row'}>
-            <input
-              ref={searchInputRef}
-              type="search"
-              placeholder="Search posts..."
-              value={searchQuery}
-              onChange={(event) => onSearchChange(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === 'Escape') {
-                  onSearchChange('')
-                  setSearchOpen(false)
-                }
-              }}
-              aria-label="Search posts"
-            />
-          </div>
-        </div>
-
-        {user && (
-          <div className="user-meta-row">
-            {isAdmin && <span className="admin-pill">Admin</span>}
-            <span className="user-pill">@{username}</span>
-          </div>
-        )}
-      </div>
-    </header>
+      </header>
+    </Card>
   )
 }

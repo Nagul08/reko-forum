@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { Badge } from './ui/badge'
+import { Button } from './ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 
 function getFriendlyVoteError(error) {
   const rawMessage = error?.message || ''
@@ -37,17 +40,12 @@ function getFriendlyUnvoteError(error) {
 }
 
 export default function PostCard({ post, user, isAdmin, onOpen, onChange }) {
-  const [votes, setVotes] = useState(post.votes_count ?? post.votes ?? 0)
   const [hasVoted, setHasVoted] = useState(false)
   const [justVoted, setJustVoted] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
   const timestamp = useMemo(() => new Date(post.created_at).toLocaleString(), [post.created_at])
-
-  useEffect(() => {
-    setVotes(post.votes_count ?? post.votes ?? 0)
-  }, [post.votes_count, post.votes])
 
   useEffect(() => {
     let active = true
@@ -104,14 +102,11 @@ export default function PostCard({ post, user, isAdmin, onOpen, onChange }) {
         return
       }
 
-      setVotes((current) => Math.max(0, current - 1))
       setHasVoted(false)
       setBusy(false)
       onChange?.()
       return
     }
-
-    setVotes((current) => current + 1)
 
     const { error: voteError } = await supabase.from('votes').insert({
       post_id: post.id,
@@ -127,7 +122,6 @@ export default function PostCard({ post, user, isAdmin, onOpen, onChange }) {
         return
       }
 
-      setVotes((current) => current - 1)
       setBusy(false)
       setError(getFriendlyVoteError(voteError))
       return
@@ -173,30 +167,37 @@ export default function PostCard({ post, user, isAdmin, onOpen, onChange }) {
   }
 
   return (
-    <article className="post-card">
-      <div className="post-header">
-        <span className="tag">#{post.tag}</span>
-        <span className="meta">{timestamp}</span>
-      </div>
+    <Card>
+      <CardHeader className="space-y-3 pb-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <Badge variant="secondary" className="capitalize">#{post.tag}</Badge>
+          <span className="text-xs text-muted-foreground">{timestamp}</span>
+        </div>
 
-      <h3>{post.title}</h3>
-      <p>{post.body}</p>
+        <CardTitle className="text-lg">{post.title}</CardTitle>
+      </CardHeader>
 
-      <div className="post-actions">
-        <span className="meta replies-count">Replies: {post.replies_count || 0}</span>
-        <button className="ghost" onClick={onOpen}>Reply</button>
-        <button className="ghost" onClick={handleReport}>Report</button>
-        {isAdmin && <button className="danger" onClick={handleDeletePost}>Delete</button>}
-        <button
-          onClick={handleVote}
-          disabled={busy}
-          className={`vote-button ${hasVoted ? 'is-on' : 'is-off'} ${justVoted ? 'pulse' : ''}`}
-        >
-          Upvote ({votes})
-        </button>
-      </div>
+      <CardContent className="space-y-4">
+        <p className="whitespace-pre-wrap text-sm text-foreground/90">{post.body}</p>
 
-      {error && <p className="error-text">{error}</p>}
-    </article>
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant="outline">Replies: {post.replies_count || 0}</Badge>
+          <Button variant="ghost" size="sm" onClick={onOpen}>Reply</Button>
+          <Button variant="ghost" size="sm" onClick={handleReport}>Report</Button>
+          {isAdmin && <Button variant="destructive" size="sm" onClick={handleDeletePost}>Delete</Button>}
+          <Button
+            onClick={handleVote}
+            disabled={busy}
+            size="sm"
+            variant={hasVoted ? 'default' : 'outline'}
+            className={justVoted ? 'animate-pulse' : ''}
+          >
+            Upvote ({post.votes_count ?? post.votes ?? 0})
+          </Button>
+        </div>
+
+        {error && <p className="text-sm text-destructive">{error}</p>}
+      </CardContent>
+    </Card>
   )
 }

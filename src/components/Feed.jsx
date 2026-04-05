@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import NewPost from './NewPost'
 import PostCard from './PostCard'
+import { Button } from './ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 
 export default function Feed({ user, isAdmin, onOpenPost, searchQuery }) {
   const [posts, setPosts] = useState([])
@@ -40,33 +42,7 @@ export default function Feed({ user, isAdmin, onOpenPost, searchQuery }) {
   const viewingAll = viewMode === 'new-all' || viewMode === 'top-all'
   const allItems = viewMode === 'top-all' ? topPosts : newPosts
 
-  useEffect(() => {
-    fetchPosts()
-  }, [tag, scope, user?.id])
-
-  useEffect(() => {
-    if (!user && scope === 'mine') {
-      setScope('public')
-    }
-  }, [user, scope])
-
-  useEffect(() => {
-    function handleOutsideClick(event) {
-      if (filterRef.current && !filterRef.current.contains(event.target)) {
-        setShowFilter(false)
-      }
-    }
-
-    if (showFilter) {
-      document.addEventListener('mousedown', handleOutsideClick)
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleOutsideClick)
-    }
-  }, [showFilter])
-
-  async function fetchPosts(options = {}) {
+  const fetchPosts = useCallback(async (options = {}) => {
     const { silent = false } = options
     if (!silent) {
       setLoading(true)
@@ -128,15 +104,41 @@ export default function Feed({ user, isAdmin, onOpenPost, searchQuery }) {
     if (!silent) {
       setLoading(false)
     }
-  }
+  }, [scope, tag, user?.id])
+
+  useEffect(() => {
+    fetchPosts()
+  }, [fetchPosts])
+
+  useEffect(() => {
+    if (!user && scope === 'mine') {
+      setScope('public')
+    }
+  }, [user, scope])
+
+  useEffect(() => {
+    function handleOutsideClick(event) {
+      if (filterRef.current && !filterRef.current.contains(event.target)) {
+        setShowFilter(false)
+      }
+    }
+
+    if (showFilter) {
+      document.addEventListener('mousedown', handleOutsideClick)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick)
+    }
+  }, [showFilter])
 
   function renderPostList(items) {
     if (items.length === 0) {
-      return <p className="loading-text">No posts found for current filters.</p>
+      return <p className="text-sm text-muted-foreground">No posts found for current filters.</p>
     }
 
     return (
-      <div className="post-list">
+      <div className="grid gap-3">
         {items.map((post) => (
           <PostCard
             key={post.id}
@@ -152,84 +154,86 @@ export default function Feed({ user, isAdmin, onOpenPost, searchQuery }) {
   }
 
   return (
-    <div className="feed">
+    <div className="grid gap-4">
       <NewPost user={user} onPost={fetchPosts} />
 
-      <div className="feed-controls">
-        <div className="filter-wrap" ref={filterRef}>
-          <button className="ghost" onClick={() => setShowFilter((current) => !current)}>
+      <div className="relative" ref={filterRef}>
+        <Button variant="outline" onClick={() => setShowFilter((current) => !current)}>
             Filter
-          </button>
+          </Button>
 
           {showFilter && (
-            <div className="filter-popover">
+            <Card className="absolute left-0 top-[calc(100%+0.5rem)] z-20 w-[min(560px,96vw)]">
+              <CardContent className="grid gap-4 pt-6">
               {user && (
-                <div className="filter-group">
-                  <p className="filter-title">Posts</p>
-                  <div className="tabs">
+                <div className="grid gap-2">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Posts</p>
+                  <div className="flex flex-wrap gap-2">
                     {[['public', 'all posts'], ['mine', 'my posts']].map(([value, label]) => (
-                      <button
+                      <Button
                         key={value}
-                        className={scope === value ? 'tab active' : 'tab'}
+                        variant={scope === value ? 'default' : 'outline'}
+                        size="sm"
                         onClick={() => setScope(value)}
                       >
                         {label}
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 </div>
               )}
 
-              <div className="filter-group">
-                <p className="filter-title">Tags</p>
-                <div className="tabs" role="tablist" aria-label="Filter tags">
+              <div className="grid gap-2">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Tags</p>
+                <div className="flex flex-wrap gap-2" role="tablist" aria-label="Filter tags">
                   {['all', 'confession', 'topic', 'rant', 'question'].map((value) => (
-                    <button
+                    <Button
                       key={value}
-                      className={tag === value ? 'tab active' : 'tab'}
+                      variant={tag === value ? 'default' : 'outline'}
+                      size="sm"
                       onClick={() => setTag(value)}
                     >
                       {value}
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>
-            </div>
+              </CardContent>
+            </Card>
           )}
-        </div>
       </div>
 
       {loading ? (
-        <p className="loading-text">Loading posts...</p>
+        <p className="text-sm text-muted-foreground">Loading posts...</p>
       ) : posts.length === 0 ? (
-        <p className="loading-text">No posts yet. Be the first.</p>
+        <p className="text-sm text-muted-foreground">No posts yet. Be the first.</p>
       ) : filteredPosts.length === 0 ? (
-        <p className="loading-text">No posts found for &quot;{searchQuery.trim()}&quot;.</p>
+        <p className="text-sm text-muted-foreground">No posts found for &quot;{searchQuery.trim()}&quot;.</p>
       ) : viewingAll ? (
-        <section className="section-block">
-          <div className="section-head">
-            <h3>{viewMode === 'top-all' ? 'Top posts' : 'New posts'}</h3>
-            <button className="ghost" onClick={() => setViewMode('home')}>Back</button>
-          </div>
-          {renderPostList(allItems)}
-        </section>
+        <Card>
+          <CardHeader className="flex-row items-center justify-between space-y-0">
+            <CardTitle>{viewMode === 'top-all' ? 'Top posts' : 'New posts'}</CardTitle>
+            <Button variant="ghost" size="sm" onClick={() => setViewMode('home')}>Back</Button>
+          </CardHeader>
+          <CardContent>{renderPostList(allItems)}</CardContent>
+        </Card>
       ) : (
-        <div className="section-grid">
-          <section className="section-block">
-            <div className="section-head">
-              <h3>New</h3>
-              <button className="ghost" onClick={() => setViewMode('new-all')}>View all</button>
-            </div>
-            {renderPostList(previewNewPosts)}
-          </section>
+        <div className="grid gap-4">
+          <Card>
+            <CardHeader className="flex-row items-center justify-between space-y-0">
+              <CardTitle>New</CardTitle>
+              <Button variant="ghost" size="sm" onClick={() => setViewMode('new-all')}>View all</Button>
+            </CardHeader>
+            <CardContent>{renderPostList(previewNewPosts)}</CardContent>
+          </Card>
 
-          <section className="section-block">
-            <div className="section-head">
-              <h3>Top</h3>
-              <button className="ghost" onClick={() => setViewMode('top-all')}>View all</button>
-            </div>
-            {renderPostList(previewTopPosts)}
-          </section>
+          <Card>
+            <CardHeader className="flex-row items-center justify-between space-y-0">
+              <CardTitle>Top</CardTitle>
+              <Button variant="ghost" size="sm" onClick={() => setViewMode('top-all')}>View all</Button>
+            </CardHeader>
+            <CardContent>{renderPostList(previewTopPosts)}</CardContent>
+          </Card>
         </div>
       )}
     </div>

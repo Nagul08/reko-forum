@@ -1,5 +1,15 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { Button } from './ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from './ui/dialog'
+import { Input } from './ui/input'
 
 const USERNAME_EMAIL_DOMAIN = 'reko.local'
 
@@ -54,38 +64,47 @@ export default function Auth({ onClose }) {
   }
 
   return (
-    <div className="overlay">
-      <div className="auth-box">
-        <button className="ghost close-button" onClick={onClose} aria-label="Close auth modal">
-          x
-        </button>
+    <Dialog open onOpenChange={(open) => !open && onClose?.()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{isSignUp ? 'Create account' : 'Sign in'}</DialogTitle>
+          <DialogDescription>
+            Use your forum username and password.
+          </DialogDescription>
+        </DialogHeader>
 
-        <h2>{isSignUp ? 'Create account' : 'Sign in'}</h2>
+        <div className="grid gap-3">
+          <Input
+            type="text"
+            placeholder="username"
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
+          />
 
-        <input
-          type="text"
-          placeholder="username"
-          value={username}
-          onChange={(event) => setUsername(event.target.value)}
-        />
+          <Input
+            type="password"
+            placeholder="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+          />
 
-        <input
-          type="password"
-          placeholder="password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-        />
+          {message && <p className="text-sm text-destructive">{message}</p>}
+        </div>
 
-        <button onClick={handlePasswordAuth} disabled={loading}>
-          {loading ? 'Loading...' : isSignUp ? 'Sign up' : 'Sign in'}
-        </button>
-
-        <p className="auth-link" onClick={() => setIsSignUp((current) => !current)}>
-          {isSignUp ? 'Already have an account? Sign in' : 'No account? Sign up'}
-        </p>
-
-        {message && <p className="auth-message">{message}</p>}
-      </div>
-    </div>
+        <DialogFooter className="flex-col gap-2 sm:flex-col sm:space-x-0">
+          <Button onClick={handlePasswordAuth} disabled={loading} className="w-full">
+            {loading ? 'Loading...' : isSignUp ? 'Sign up' : 'Sign in'}
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            className="w-full"
+            onClick={() => setIsSignUp((current) => !current)}
+          >
+            {isSignUp ? 'Already have an account? Sign in' : 'No account? Sign up'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

@@ -41,7 +41,7 @@ export default function App() {
   }
 
   return (
-    <div className="app-shell">
+    <div className="mx-auto flex min-h-screen w-full max-w-5xl flex-col gap-4 p-4 md:p-6">
       <Navbar
         user={user}
         isAdmin={isAdmin}
@@ -55,7 +55,7 @@ export default function App() {
 
       {showAuth && <Auth onClose={() => setShowAuth(false)} />}
 
-      <main className="main-content">
+      <main className="flex flex-col gap-4">
         <Feed user={user} isAdmin={isAdmin} onOpenPost={setActivePost} searchQuery={searchQuery} />
       </main>
 

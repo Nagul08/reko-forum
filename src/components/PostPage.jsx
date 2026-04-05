@@ -1,5 +1,15 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { Badge } from './ui/badge'
+import { Button } from './ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from './ui/dialog'
+import { Textarea } from './ui/textarea'
 
 export default function PostPage({ post, user, isAdmin, onClose }) {
   const [replies, setReplies] = useState([])
@@ -8,11 +18,7 @@ export default function PostPage({ post, user, isAdmin, onClose }) {
   const [posting, setPosting] = useState(false)
   const [error, setError] = useState('')
 
-  useEffect(() => {
-    fetchReplies()
-  }, [post.id])
-
-  async function fetchReplies() {
+  const fetchReplies = useCallback(async () => {
     setLoading(true)
     setError('')
 
@@ -30,7 +36,11 @@ export default function PostPage({ post, user, isAdmin, onClose }) {
 
     setReplies(data || [])
     setLoading(false)
-  }
+  }, [post.id])
+
+  useEffect(() => {
+    fetchReplies()
+  }, [fetchReplies])
 
   async function handleReply() {
     if (!user) {
@@ -79,55 +89,59 @@ export default function PostPage({ post, user, isAdmin, onClose }) {
   }
 
   return (
-    <div className="overlay" onClick={onClose}>
-      <section className="post-page" onClick={(event) => event.stopPropagation()}>
-        <button className="ghost close-button" onClick={onClose} aria-label="Close post modal">
-          x
-        </button>
+    <Dialog open onOpenChange={(open) => !open && onClose?.()}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+        <DialogHeader className="space-y-2">
+          <Badge variant="secondary" className="w-fit capitalize">#{post.tag}</Badge>
+          <DialogTitle>{post.title}</DialogTitle>
+          <DialogDescription className="whitespace-pre-wrap text-sm text-foreground/90">
+            {post.body}
+          </DialogDescription>
+        </DialogHeader>
 
-        <span className="tag">#{post.tag}</span>
-        <h2>{post.title}</h2>
-        <p>{post.body}</p>
+        <div className="space-y-3 border-t pt-3">
+          <h3 className="text-sm font-semibold">Replies</h3>
+          {loading ? (
+            <p className="text-sm text-muted-foreground">Loading replies...</p>
+          ) : replies.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No replies yet.</p>
+          ) : (
+            <ul className="grid gap-2">
+              {replies.map((reply) => (
+                <li key={reply.id} className="rounded-md border border-border/70 bg-muted/30 p-3">
+                  <p className="whitespace-pre-wrap text-sm">{reply.body}</p>
+                  <small className="text-xs text-muted-foreground">{new Date(reply.created_at).toLocaleString()}</small>
+                  {isAdmin && (
+                    <div className="mt-2">
+                      <Button variant="destructive" size="sm" onClick={() => handleDeleteReply(reply.id)}>
+                        Delete reply
+                      </Button>
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
 
-        <hr />
-
-        <h3>Replies</h3>
-        {loading ? (
-          <p className="loading-text">Loading replies...</p>
-        ) : replies.length === 0 ? (
-          <p className="loading-text">No replies yet.</p>
-        ) : (
-          <ul className="reply-list">
-            {replies.map((reply) => (
-              <li key={reply.id}>
-                <p>{reply.body}</p>
-                <small>{new Date(reply.created_at).toLocaleString()}</small>
-                {isAdmin && (
-                  <div className="reply-admin-row">
-                    <button className="danger" onClick={() => handleDeleteReply(reply.id)}>Delete reply</button>
-                  </div>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-
-        <div className="reply-box">
-          {!user && <p className="loading-text">Sign in to reply to this post.</p>}
-          <textarea
+        <div className="grid gap-2">
+          {!user && <p className="text-sm text-muted-foreground">Sign in to reply to this post.</p>}
+          <Textarea
             rows={3}
             value={replyText}
             placeholder="Write a reply..."
             onChange={(event) => setReplyText(event.target.value)}
             disabled={!user}
           />
-          <button onClick={handleReply} disabled={!user || posting || !replyText.trim()}>
-            {posting ? 'Posting...' : 'Reply'}
-          </button>
+          <div className="flex justify-end">
+            <Button onClick={handleReply} disabled={!user || posting || !replyText.trim()}>
+              {posting ? 'Posting...' : 'Reply'}
+            </Button>
+          </div>
         </div>
 
-        {error && <p className="error-text">{error}</p>}
-      </section>
-    </div>
+        {error && <p className="text-sm text-destructive">{error}</p>}
+      </DialogContent>
+    </Dialog>
   )
 }

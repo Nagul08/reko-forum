@@ -1,5 +1,16 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { Button } from './ui/button'
+import { Card, CardContent } from './ui/card'
+import { Input } from './ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select'
+import { Textarea } from './ui/textarea'
 
 const TAGS = ['confession', 'topic', 'rant', 'question']
 
@@ -45,52 +56,61 @@ export default function NewPost({ user, onPost }) {
 
   if (!open) {
     return (
-      <button className="new-post-trigger" onClick={() => setOpen(true)}>
+      <Button variant="outline" className="h-11 w-full justify-start" onClick={() => setOpen(true)}>
         {user ? 'Create a post...' : 'Sign in to create a post'}
-      </button>
+      </Button>
     )
   }
 
   if (!user) {
     return (
-      <div className="new-post-form">
-        <p className="loading-text">Posting is available only after login.</p>
-      </div>
+      <Card>
+        <CardContent className="pt-6">
+          <p className="text-sm text-muted-foreground">Posting is available only after login.</p>
+        </CardContent>
+      </Card>
     )
   }
 
   return (
-    <div className="new-post-form">
-      <div className="row">
-        <select value={tag} onChange={(event) => setTag(event.target.value)}>
-          {TAGS.map((value) => (
-            <option key={value} value={value}>{value}</option>
-          ))}
-        </select>
-      </div>
+    <Card>
+      <CardContent className="grid gap-3 pt-6">
+        <div>
+          <Select value={tag} onValueChange={setTag}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select tag" />
+            </SelectTrigger>
+            <SelectContent>
+              {TAGS.map((value) => (
+                <SelectItem key={value} value={value}>{value}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-      <input
-        placeholder="Title"
-        value={title}
-        onChange={(event) => setTitle(event.target.value)}
-        maxLength={150}
-      />
+        <Input
+          placeholder="Title"
+          value={title}
+          onChange={(event) => setTitle(event.target.value)}
+          maxLength={150}
+        />
 
-      <textarea
-        placeholder="What's on your mind?"
-        value={body}
-        onChange={(event) => setBody(event.target.value)}
-        rows={5}
-      />
+        <Textarea
+          placeholder="What's on your mind?"
+          value={body}
+          onChange={(event) => setBody(event.target.value)}
+          rows={5}
+        />
 
-      {error && <p className="error-text">{error}</p>}
+        {error && <p className="text-sm text-destructive">{error}</p>}
 
-      <div className="form-actions">
-        <button className="ghost" onClick={() => setOpen(false)}>Cancel</button>
-        <button onClick={handleSubmit} disabled={loading || !title.trim() || !body.trim()}>
-          {loading ? 'Posting...' : 'Post'}
-        </button>
-      </div>
-    </div>
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
+          <Button onClick={handleSubmit} disabled={loading || !title.trim() || !body.trim()}>
+            {loading ? 'Posting...' : 'Post'}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   )
 }
