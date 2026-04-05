@@ -151,6 +151,46 @@ button.danger:hover {
   box-shadow: none;
 }
 
+.vote-button.is-off {
+  background: transparent;
+  color: var(--green-soft);
+  border-color: var(--ghost-border);
+  box-shadow: none;
+}
+
+.vote-button.is-off:hover {
+  box-shadow: 0 0 0 1px rgba(49, 255, 99, 0.2);
+}
+
+.vote-button.is-on {
+  background: linear-gradient(120deg, rgba(49, 255, 99, 0.35), rgba(124, 7, 255, 0.9));
+  border-color: rgba(49, 255, 99, 0.65);
+  color: #ffffff;
+  box-shadow: 0 0 0 1px rgba(49, 255, 99, 0.4), 0 0 14px rgba(49, 255, 99, 0.4);
+}
+
+.vote-button.is-on:hover {
+  box-shadow: 0 0 0 1px rgba(49, 255, 99, 0.45), 0 0 16px rgba(49, 255, 99, 0.5);
+}
+
+.vote-button.pulse {
+  animation: upvotePulse 0.32s ease;
+}
+
+@keyframes upvotePulse {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
 input,
 textarea,
 select {

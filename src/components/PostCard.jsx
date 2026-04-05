@@ -26,6 +26,8 @@ function getFriendlyVoteError(error) {
 
 export default function PostCard({ post, user, isAdmin, onOpen, onChange }) {
   const [votes, setVotes] = useState(post.votes_count ?? post.votes ?? 0)
+  const [hasVoted, setHasVoted] = useState(false)
+  const [justVoted, setJustVoted] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
@@ -35,11 +37,47 @@ export default function PostCard({ post, user, isAdmin, onOpen, onChange }) {
     setVotes(post.votes_count ?? post.votes ?? 0)
   }, [post.votes_count, post.votes])
 
+  useEffect(() => {
+    let active = true
+
+    async function checkVoteState() {
+      if (!user?.id) {
+        setHasVoted(false)
+        return
+      }
+
+      const { data, error: existingVoteError } = await supabase
+        .from('votes')
+        .select('id')
+        .eq('post_id', post.id)
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+      if (!active) return
+      if (!existingVoteError && data) {
+        setHasVoted(true)
+      } else {
+        setHasVoted(false)
+      }
+    }
+
+    checkVoteState()
+
+    return () => {
+      active = false
+    }
+  }, [post.id, user?.id])
+
   async function handleVote() {
     if (busy) return
 
     if (!user) {
       setError('Please sign in to upvote posts.')
+      return
+    }
+
+    if (hasVoted) {
+      setError('You already upvoted this post.')
       return
     }
 
@@ -63,6 +101,9 @@ export default function PostCard({ post, user, isAdmin, onOpen, onChange }) {
       return
     }
 
+    setHasVoted(true)
+    setJustVoted(true)
+    setTimeout(() => setJustVoted(false), 320)
     setBusy(false)
     onChange?.()
   }
@@ -114,7 +155,13 @@ export default function PostCard({ post, user, isAdmin, onOpen, onChange }) {
         <button className="ghost" onClick={onOpen}>Reply</button>
         <button className="ghost" onClick={handleReport}>Report</button>
         {isAdmin && <button className="danger" onClick={handleDeletePost}>Delete</button>}
-        <button onClick={handleVote} disabled={busy}>Upvote ({votes})</button>
+        <button
+          onClick={handleVote}
+          disabled={busy}
+          className={`vote-button ${hasVoted ? 'is-on' : 'is-off'} ${justVoted ? 'pulse' : ''}`}
+        >
+          Upvote ({votes})
+        </button>
       </div>
 
       {error && <p className="error-text">{error}</p>}
